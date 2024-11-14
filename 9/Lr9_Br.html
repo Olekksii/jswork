@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гра 21</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url("fon.jpg");
+			background-size: cover;
+            color: #fff;
+        }
+
+        .game {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 1000px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .card-display {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+
+        .score {
+            font-size: 1.5em;
+            color: #ffd700;
+            margin: 0 0 10px;
+        }
+
+        .card-display h3 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #ffd700;
+        }
+
+        .card {
+            padding: 5px;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        .card img {
+            width: 90px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .card img:hover {
+            transform: scale(1.1);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            font-size: 1em;
+            font-weight: bold;
+            color: #333;
+            background-color: #ffd700;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            background-color: #ffdf00;
+        }
+
+        .result {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-top: 20px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game">
+        <h1>Ласкаво просимо до гри "21"</h1>
+        <div id="welcome"></div>
+        
+        <div class="card-display">
+            <div>
+                <h3 id="userCardsTitle"></h3>
+                <div class="score" id="userScoreDisplay">Очки: 0</div>
+                <div id="userCards"></div>
+            </div>
+            <div>
+                <h3 id="computerCardsTitle"></h3>
+                <div class="score" id="computerScoreDisplay">Очки: 0</div>
+                <div id="computerCards"></div>
+            </div>
+        </div>
+
+        <button class="btn" onclick="drawCard()">Тягнути</button>
+        <button class="btn" onclick="finishGame()">Завершити</button>
+        <div class="result" id="finalResult"></div>
+    </div>
+
+        <script>
+        let userName = prompt("Введіть ваше ім'я:");
+        if (!userName) userName = "Гравець";
+
+        let userScore = 0;
+        let computerScore = 0;
+        let gameOver = false;
+
+        const cardUrls = {
+            2: { hearts: "cards/2H.png", diamonds: "cards/2D.png", clubs: "cards/2C.png", spades: "cards/2S.png" },
+            3: { hearts: "cards/3H.png", diamonds: "cards/3D.png", clubs: "cards/3C.png", spades: "cards/3S.png" },
+            4: { hearts: "cards/4H.png", diamonds: "cards/4D.png", clubs: "cards/4C.png", spades: "cards/4S.png" },
+            5: { hearts: "cards/5H.png", diamonds: "cards/5D.png", clubs: "cards/5C.png", spades: "cards/5S.png" },
+            6: { hearts: "cards/6H.png", diamonds: "cards/6D.png", clubs: "cards/6C.png", spades: "cards/6S.png" },
+            7: { hearts: "cards/7H.png", diamonds: "cards/7D.png", clubs: "cards/7C.png", spades: "cards/7S.png" },
+            8: { hearts: "cards/8H.png", diamonds: "cards/8D.png", clubs: "cards/8C.png", spades: "cards/8S.png" },
+            9: { hearts: "cards/9H.png", diamonds: "cards/9D.png", clubs: "cards/9C.png", spades: "cards/9S.png" },
+            10: { hearts: "cards/10H.png", diamonds: "cards/10D.png", clubs: "cards/10C.png", spades: "cards/10S.png" },
+			10: { hearts: "cards/JH.png", diamonds: "cards/JD.png", clubs: "cards/JC.png", spades: "cards/JS.png" },
+			10: { hearts: "cards/QH.png", diamonds: "cards/QD.png", clubs: "cards/QC.png", spades: "cards/QS.png" },
+			10: { hearts: "cards/KH.png", diamonds: "cards/KD.png", clubs: "cards/KC.png", spades: "cards/KS.png" },
+            11: { hearts: "cards/AH.png", diamonds: "cards/AD.png", clubs: "cards/AC.png", spades: "cards/AS.png" }
+        };
+
+        const suits = ["hearts", "diamonds", "clubs", "spades"];
+
+        function getRandomCard() {
+            const value = Math.floor(Math.random() * (11 - 2 + 1)) + 2;
+            const suit = suits[Math.floor(Math.random() * suits.length)];
+            return { value, suit };
+        }
+
+        function drawCard() {
+            if (gameOver) return;
+
+            let userCard = getRandomCard();
+            userScore += userCard.value;
+
+            document.getElementById("userScoreDisplay").innerText = `Очки: ${userScore}`;
+            document.getElementById("userCardsTitle").innerText = `${userName} - Карти`;
+
+            let userCardElement = document.createElement("div");
+            userCardElement.className = "card";
+            let userCardImg = document.createElement("img");
+            userCardImg.src = cardUrls[userCard.value][userCard.suit];
+            userCardElement.appendChild(userCardImg);
+            document.getElementById("userCards").appendChild(userCardElement);
+
+            if (computerScore < 17) {
+                let computerCard = getRandomCard();
+                computerScore += computerCard.value;
+
+                document.getElementById("computerScoreDisplay").innerText = `Очки: ${computerScore}`;
+                document.getElementById("computerCardsTitle").innerText = `Комп'ютер - Карти`;
+
+                let computerCardElement = document.createElement("div");
+                computerCardElement.className = "card";
+                let computerCardImg = document.createElement("img");
+                computerCardImg.src = cardUrls[computerCard.value][computerCard.suit];
+                computerCardElement.appendChild(computerCardImg);
+                document.getElementById("computerCards").appendChild(computerCardElement);
+            }
+
+            checkScores();
+        }
+
+        function checkScores() {
+            if (userScore > 21) {
+                endGame(`${userName} програв, набравши більше 21! Комп'ютер переміг.`);
+            } else if (computerScore > 21) {
+                endGame(`Комп'ютер програв, набравши більше 21! ${userName} переміг!`);
+            } else if (userScore === 21 || computerScore === 21) {
+                if (userScore === 21 && computerScore === 21) {
+                    endGame(`Нічия! У вас обох рівно по 21.`);
+                } else if (userScore === 21) {
+                    endGame(`${userName} виграв, набравши рівно 21!`);
+                } else {
+                    endGame(`Комп'ютер виграв, набравши рівно 21!`);
+                }
+            }
+        }
+
+        function finishGame() {
+            if (gameOver) return;
+
+            while (computerScore < 17) {
+                let computerCard = getRandomCard();
+                computerScore += computerCard.value;
+
+                document.getElementById("computerScoreDisplay").innerText = `Очки: ${computerScore}`;
+                
+                let computerCardElement = document.createElement("div");
+                computerCardElement.className = "card";
+                let computerCardImg = document.createElement("img");
+                computerCardImg.src = cardUrls[computerCard.value][computerCard.suit];
+                computerCardElement.appendChild(computerCardImg);
+                document.getElementById("computerCards").appendChild(computerCardElement);
+            }
+
+            if (computerScore > 21) {
+                endGame(`Комп'ютер програв, набравши більше 21! ${userName} переміг!`);
+            } else {
+                if (Math.abs(21 - userScore) < Math.abs(21 - computerScore)) {
+                    endGame(`${userName} виграв, набравши ближче до 21 із ${userScore} очками!`);
+                } else if (Math.abs(21 - computerScore) < Math.abs(21 - userScore)) {
+                    endGame(`Комп'ютер виграв, набравши ближче до 21 із ${computerScore} очками!`);
+                } else {
+                    endGame(`Нічия! Обидва гравці набрали однакову кількість очок.`);
+                }
+            }
+        }
+
+        function endGame(message) {
+            let finalResult = document.getElementById("finalResult");
+            finalResult.innerText = message;
+            finalResult.classList.add("fade-in");
+            gameOver = true;
+        }
+    </script>
+</body>
+</html>
